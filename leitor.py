@@ -2,19 +2,19 @@ import RPi.GPIO as GPIO
 import time
 import requests
 import sqlite3
-from mfrc522 import SimpleMFRC522  # Biblioteca para ler RFID
+from mfrc522 import SimpleMFRC522  
 
-# Inicializa o leitor RFID
+
 reader = SimpleMFRC522()
 
-# Caminho do banco de dados
+
 DB_PATH = '/home/pi/Documents/rasp/teste/users.db'
 
-# Conexão com o banco de dados local
+
 def connect_db():
     return sqlite3.connect(DB_PATH)
 
-# Criar tabela de usuários se não existir
+
 def create_users_table():
     with connect_db() as conn:
         cursor = conn.cursor()
@@ -27,22 +27,22 @@ def create_users_table():
         """)
         conn.commit()
 
-create_users_table()  # Garante que a tabela existe
+create_users_table()  
 
-# Função para buscar o usuário pelo ID da tag RFID
+
 def get_user_by_tag(tag_id):
     with connect_db() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT username FROM users WHERE tag_id = ?", (tag_id,))
         user = cursor.fetchone()
-        return user[0] if user else None  # Retorna o nome do usuário ou None
+        return user[0] if user else None  
 
-# Função para enviar dados ao backend
+
 def send_log(user, action):
     data = {"user": user, "action": action}
     try:
         response = requests.post('http://localhost:8080/log', json=data)
-        print(response.json())  # Mostra resposta do servidor
+        print(response.json())  
     except Exception as e:
         print(f"Erro ao enviar log: {e}")
 
@@ -50,20 +50,20 @@ print("Aproxime o cartão RFID...")
 
 try:
     while True:
-        tag_id, _ = reader.read()  # Lê a tag RFID
-        tag_id = str(tag_id).strip()  # Converte ID para string e remove espaços extras
+        tag_id, _ = reader.read()  
+        tag_id = str(tag_id).strip()  
 
-        print(f"Tag lida: {tag_id}")  # DEBUG: Mostra qual ID foi lido
+        print(f"Tag lida: {tag_id}")  
         
-        user = get_user_by_tag(tag_id)  # Busca usuário no banco de dados
+        user = get_user_by_tag(tag_id)  
         if user:
             print(f"✅ Acesso permitido para {user} (Tag: {tag_id})")
-            send_log(user, "Access Granted")  # Envia o nome do usuário real
+            send_log(user, "Access Granted")  
         else:
             print(f"❌ Acesso negado para a tag {tag_id}")
             send_log("Usuário desconhecido", "Access Denied")
 
-        time.sleep(2)  # Evita múltiplas leituras seguidas
+        time.sleep(2)  
 
 except KeyboardInterrupt:
     GPIO.cleanup()

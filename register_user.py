@@ -5,7 +5,6 @@ from mfrc522 import SimpleMFRC522
 
 reader = SimpleMFRC522()
 
-# Conexão com o banco de dados
 def get_user_by_tag(tag_id):
     with sqlite3.connect('users.db') as conn:
         cursor = conn.cursor()

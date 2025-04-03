@@ -18,21 +18,18 @@
             uuid: "web-client"
         });
 
-        // Função para adicionar logs na tela
         function updateLogs(log) {
             const logDiv = document.getElementById('logs');
 
-            // Evita valores undefined e define valores padrão
             const timestamp = log.timestamp || new Date().toISOString();
             const user = log.user || "Usuário desconhecido";
             const action = log.action || "Ação desconhecida";
 
             const entry = document.createElement('p');
             entry.textContent = `${timestamp}: ${user} - ${action}`;
-            logDiv.prepend(entry); // Adiciona no topo
+            logDiv.prepend(entry); 
         }
 
-        // Listener para receber mensagens do PubNub
         pubnub.addListener({
             message: function(event) {
                 console.log("Nova mensagem recebida:", event.message);
@@ -45,23 +42,21 @@
             }
         });
 
-        // Inscrever-se no canal 'teste'
         pubnub.subscribe({ channels: ["teste"] });
 
-        // Buscar logs iniciais do servidor
         async function fetchLogs() {
             try {
                 const response = await fetch('/logs');
                 const logs = await response.json();
                 const logDiv = document.getElementById('logs');
-                logDiv.innerHTML = ''; // Limpa os logs antigos
+                logDiv.innerHTML = ''; 
                 logs.forEach(updateLogs);
             } catch (error) {
                 console.error("Erro ao buscar logs:", error);
             }
         }
 
-        fetchLogs(); // Carrega os logs na inicialização
+        fetchLogs(); 
     </script>
 </body>
 </html>
