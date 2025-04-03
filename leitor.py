@@ -8,11 +8,16 @@ from mfrc522 import SimpleMFRC522
 reader = SimpleMFRC522()
 
 
-DB_PATH = '/home/pi/Documents/rasp/teste/users.db'
+USERS_DB_PATH = '/home/pi/Documents/rasp/teste/users.db'
+LOGS_DB_PATH = '/home/pi/Documents/rasp/teste/logs.db'
 
 
 def connect_db():
-    return sqlite3.connect(DB_PATH)
+    return sqlite3.connect(USERS_DB_PATH)
+
+
+def connect_logs_db():
+    return sqlite3.connect(LOGS_DB_PATH)
 
 
 def create_users_table():
@@ -27,8 +32,21 @@ def create_users_table():
         """)
         conn.commit()
 
-create_users_table()  
+def create_logs_table():
+    with connect_logs_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                user TEXT NOT NULL,
+                action TEXT NOT NULL
+            )
+        """)
+        conn.commit()
 
+create_users_table()
+create_logs_table()
 
 def get_user_by_tag(tag_id):
     with connect_db() as conn:
@@ -37,8 +55,15 @@ def get_user_by_tag(tag_id):
         user = cursor.fetchone()
         return user[0] if user else None  
 
+def save_log_to_db(user, action):
+    with connect_logs_db() as conn:
+        cursor = conn.cursor()
+        print(f"📌 Salvando no banco: {user} - {action}")  # 🔹 Debug para verificar chamada
+        cursor.execute("INSERT INTO logs (user, action) VALUES (?, ?)", (user, action))
+        conn.commit()
 
 def send_log(user, action):
+    save_log_to_db(user, action)  
     data = {"user": user, "action": action}
     try:
         response = requests.post('http://localhost:8080/log', json=data)
